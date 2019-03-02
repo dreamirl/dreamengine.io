@@ -1,0 +1,14 @@
+{
+  "name": "dreamengine.io",
+  "version": "0.0.1",
+  "description": "A WebSockets implementation over uWebSockets designed for high-perfs-games",
+  "main": "de.io.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Inateno",
+  "license": "ISC",
+  "dependencies": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v15.5.0"
+  }
+}
