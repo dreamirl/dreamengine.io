@@ -14,38 +14,9 @@
  * - client standardized implementation, served by the server
  * - DreamEngine backend logics?
  */
-const uWS = require('uWebSockets.js');
-
-function SimpleSocket(ws) {
-  this._ws = ws;
-  this.id = Date.now(); // imrpove this
-  this._events = {};
-  this.isDisconnected = false;
-
-  this.ondisconnect = function(){ /* override me plz */ };
-}
-SimpleSocket.prototype.listen = function( name, callback ) {
-  if ( this._events[ name ] ) {
-    console.warn( 'WARNING: Overriding the event ' + name );
-  }
-  this._events[ name ] = callback;
-};
-SimpleSocket.prototype.send = function( data ) {
-  if ( this.isDisconnected ) {
-    return;
-  }
-  
-  this._ws.send( JSON.stringify( data ) );
-};
-SimpleSocket.prototype._destroy = function( ws, code, message ) {
-  delete this._ws;
-  for ( var e in this._events ) {
-    delete this._events[ e ];
-  }
-  this._events = null;
-};
-
-
+const uWS = require( 'uWebSockets.js' );
+const SimpleSocket = require( './SimpleSocket' );
+const Pool = require( './Pool' );
 
 const deio = {
   _connectedSockets: {},
@@ -54,6 +25,8 @@ const deio = {
   options: {
     useJSON: true
   },
+
+  _pools: {},
   
   onConnection: function(){ /* override me plz */ },
 
@@ -103,8 +76,26 @@ const deio = {
   },
 
   // need pools like in socket.io
-  pool: function(  poolId ) {
+  joinPool: function( socket, poolName ) {
+    if ( !this._pools[ poolName ] ) {
+      this._pools = new Pool( poolName );
+    }
+    this._pools[ poolName ].addSocket( socket );
+  },
 
+  leavePool: function( socket, poolName ) {
+    if ( !this._pools[ poolName ] ) {
+      return;
+    }
+    this._pools[ poolName ].removeSocket( socket );
+  },
+
+  pool: function( poolName ) {
+    if ( !this._pools[ poolName ] ) {
+      console.warn( 'WARNING: You tried to get a pool that does not exist. Creating an empty pool to prevent code crash. PoolName is: ' + poolName );
+      this._pools = new Pool( poolName );
+    }
+    return this._pools[ poolName ];
   },
 
   // send to all connected ws
@@ -115,34 +106,34 @@ const deio = {
   },
 
   startApp: function( port, options ) {
-    this._app = uWS[ options.ssl ? 'SSLApp' : 'App' ]({
+    this._app = uWS[ options.ssl ? 'SSLApp' : 'App' ]( {
       key_file_name: options.key_perm,
       cert_file_name: options.cert_perm,
       passphrase: options.ssl_pwd
-    })
-    // should be possible to add as many as we wants
+    } )
+    // TODO should be possible to add as many as we wants
     .ws('/*', {
       /* Options */
       compression: options.compression || 0,
       maxPayloadLength: options.maxPayloadLength || 16 * 1024 * 1024,
       idleTimeout: options.idleTimeout || 7,
       /* Handlers */
-      open: (ws, req) => {
-        console.log('A WebSocket connected via URL: ' + req.getUrl());
+      open: ( ws, req ) => {
+        console.log( 'A WebSocket connected via URL: ' + req.getUrl() );
 
         // looks like sockets have no id or hash
         // need to create it and store it
-        deio._registerSocket(ws, req);
+        deio._registerSocket( ws, req );
       },
-      message: (ws, binaryMsg, isBinary) => {
-        var parsed = String.fromCharCode.apply(null, new Uint16Array(binaryMsg));
-        if (parsed === '1') {
+      message: ( ws, binaryMsg, isBinary ) => {
+        var parsed = String.fromCharCode.apply( null, new Uint16Array( binaryMsg ) );
+        if ( parsed === '1' ) {
           // just ping
           return;
         }
     
         // console.log('message received from ' + ws.id, binaryMsg, isBinary, parsed);
-        deio._onMessageEnter(ws, parsed, binaryMsg);
+        deio._onMessageEnter( ws, parsed, binaryMsg );
         
         // TODO
         /* Ok is false if backpressure was built up, wait for drain */
@@ -151,23 +142,24 @@ const deio = {
     
       // not sure what is this for lol
       drain: (ws) => {
-        console.log('WebSocket backpressure: ' + ws.getBufferedAmount());
+        console.log( 'WebSocket backpressure: ' + ws.getBufferedAmount() );
       },
     
-      close: (ws, code, message) => {
+      close: ( ws, code, message ) => {
         deio._closeSocket( ws, code, message );
       }
     })
-    .any('/*', (res, req) => {
-      res.end('Nothing to see here!');
-    })
-    .listen(port, (token) => {
-      if (token) {
-        console.log('Listening to port ' + port);
+    // TODO, should be able to listen severals and customized routes
+    .any( '/*', ( res, req ) => {
+      res.end( 'Nothing to see here!' );
+    } )
+    .listen( port, ( token ) => {
+      if ( token ) {
+        console.log( 'Listening to port ' + port );
       } else {
-        console.log('Failed to listen to port ' + port);
+        console.log( 'Failed to listen to port ' + port );
       }
-    });    
+    } );
   }
 }
 

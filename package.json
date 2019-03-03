@@ -1,5 +1,5 @@
 {
-  "name": "dreamengine.io",
+  "name": "@dreamirl/dreamengine.io",
   "version": "0.0.1",
   "description": "A WebSockets implementation over uWebSockets designed for high-perfs-games",
   "main": "de.io.js",
