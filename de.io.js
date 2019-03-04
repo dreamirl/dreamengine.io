@@ -34,6 +34,7 @@ const deio = {
     const soc = new SimpleSocket( ws );
     this._connectedSockets[ soc.id ] = soc;
     ws.id = soc.id;
+    soc.send( '1', soc.id );
     this.onConnection( soc, req );
   },
 
@@ -60,11 +61,11 @@ const deio = {
     var socket = this._connectedSockets[ ws.id ];
 
     if ( this._events[ msg._ ] ) {
-      this._events[ msg._ ]( socket, msg.d );
+      this._events[ msg._ ].apply( this, [ socket ].concat( msg.d ) );
     }
 
     if ( socket._events[ msg._ ] ) {
-      socket._events[ msg._ ]( msg.d );
+      socket._events[ msg._ ].apply( socket, msg.d );
     }
   },
 
@@ -76,18 +77,22 @@ const deio = {
   },
 
   // need pools like in socket.io
-  joinPool: function( socket, poolName ) {
+  joinPool: function( poolName, socket ) {
     if ( !this._pools[ poolName ] ) {
-      this._pools = new Pool( poolName );
+      this._pools[ poolName ] = new Pool( poolName );
     }
     this._pools[ poolName ].addSocket( socket );
   },
 
-  leavePool: function( socket, poolName ) {
+  leavePool: function( poolName, socket ) {
     if ( !this._pools[ poolName ] ) {
       return;
     }
     this._pools[ poolName ].removeSocket( socket );
+  },
+
+  poolExists: function( poolName ) {
+    return !!this._pools[ poolName ];
   },
 
   pool: function( poolName ) {
@@ -99,9 +104,9 @@ const deio = {
   },
 
   // send to all connected ws
-  broadcast: function( msgName, data ) {
+  broadcast: function() {
     for ( var i in this._connectedSockets ) {
-      this._connectedSockets[ i ].send( { _: msgName, d: data } );
+      this._connectedSockets[ i ].send.apply( this._connectedSockets[ i ], arguments );
     }
   },
 
@@ -116,7 +121,7 @@ const deio = {
       /* Options */
       compression: options.compression || 0,
       maxPayloadLength: options.maxPayloadLength || 16 * 1024 * 1024,
-      idleTimeout: options.idleTimeout || 7,
+      idleTimeout: options.idleTimeout || 10,
       /* Handlers */
       open: ( ws, req ) => {
         console.log( 'A WebSocket connected via URL: ' + req.getUrl() );

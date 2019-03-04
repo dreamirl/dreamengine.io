@@ -1,9 +1,11 @@
 import SimpleSocket from './SimpleSocket';
+import socketEncode from './socketEncode';
 
 function DESocket( url, options ) 
 {
   SimpleSocket.call( this );
 
+  this.id = null; // automatically pushed by server
   this.options = {
     pingInterval: 5000,
     debug: false
@@ -15,7 +17,8 @@ function DESocket( url, options )
   }
   this.url = url;
 
-  this.connect();
+  this.listen( '1', id => this.id = id );
+  return this;
 }
 
 DESocket.prototype = new SimpleSocket();
@@ -32,6 +35,7 @@ DESocket.prototype.connect = function( url ) {
 
   this._ws = new WebSocket( url );
   this.url = url;
+  this.id = null;
 
   this._ws.onopen = () => this._onOpen();
   this._ws.onmessage = ( msg ) => this._onMessage( msg );
@@ -57,13 +61,18 @@ DESocket.prototype._onOpen = function() {
 };
 
 DESocket.prototype._onMessage = function( msg ) {
-  var parsed = JSON.parse( msg.data );
+  var reader = new FileReader();
+  reader.addEventListener( 'loadend', () => {
+    var readable = String.fromCharCode.apply( null, new Uint16Array( reader.result ) );
+    var parsed = JSON.parse( readable );
 
-  if ( this._events[ parsed._ ] ) {
-    this._events[ parsed._ ]( parsed.d, msg );
-  }
+    if ( this._events[ parsed._ ] ) {
+      this._events[ parsed._ ].apply( this, parsed.d );
+    }
 
-  this.onMessage( parsed, msg );
+    this.onMessage( parsed, msg );
+  } );
+  reader.readAsArrayBuffer( msg.data );
 };
 
 DESocket.prototype._onClose = function() {
@@ -73,29 +82,9 @@ DESocket.prototype._onClose = function() {
 
   // TODO add condition to see the reason and decide what to do correctly
   // for now the socket try to reconnect indefinitively
-  setTimeout( this.connect, 1000 );
+  setTimeout( () => this.connect(), 1000 );
   
   this.onClose();
 };
-
-DESocket.prototype.send = function( msgName, value ) {
-  if ( this.options.debug ) {
-    console.log( 'sending', msgName, ': ', value );
-  }
-
-  this._ws.send( socketEncode( JSON.stringify( {
-    _: msgName,
-    d: value
-  } ) ) );
-}
-
-function socketEncode(str) {
-  var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-  var bufView = new Uint16Array(buf);
-  for (var i=0, strLen=str.length; i < strLen; i++) {
-    bufView[i] = str.charCodeAt(i);
-  }
-  return buf;
-}
 
 export default DESocket;

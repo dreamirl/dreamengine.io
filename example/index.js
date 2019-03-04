@@ -20,7 +20,7 @@ function connect() {
   socket = new WebSocket('ws://localhost:9000');
   // socket.binaryType = 'arraybuffer';
   socket.onopen = function() {
-    console.log('connection open');
+    console.log('connection open', arguments);
     tries = 0;
   }
   socket.onmessage = handleReceive;
@@ -52,39 +52,37 @@ function str2ab(str) {
   return buf;
 }
 
-function send(msgName, value) {
-  console.log('sending', msgName, ': ', value)
-  socket.send( str2ab( JSON.stringify( {
-    _: msgName,
-    d: value
-  } ) ) );
+function send() {
+
+  var args = Array.prototype.slice.call( arguments );
+  var eventName = args.shift();
+
+  console.log('sending', eventName, ': ', args)
+  var str = str2ab( JSON.stringify( {
+    _: eventName,
+    d: args
+  } ) );
+  socket.send( str );
 } 
 
-function handleReceive(message) {
-  // 受信したRAWデータをcanvasに
-  console.log(message);
-  // var c = resultCanvas = document.getElementById('result');
-  // var ctx = c.getContext('2d');
-  // var imageData = ctx.createImageData(200, 200);
-  // var pixels = imageData.data;
-
-  // var buffer = new Uint8Array(message.data);
-  // for (var i=0; i < pixels.length; i++) {
-  //   pixels[i] = buffer[i];
-  // }
-  // ctx.putImageData(imageData, 0, 0);
-
-  var parsed = JSON.parse( message.data );
-  // en vrai un truc comme au back ce sera mieux hein, maibon
-  switch( parsed._ ) {
-    case 'chat':
-      receiveChat( parsed.d );
-      break;
-    
-    case 'ds':
-      chat.innerHTML += '<br/><i>' + parsed.d.p + ' left</i>';''
-      break;
-  }
+function handleReceive(messageEvent) {
+  var reader = new FileReader();
+  reader.addEventListener("loadend", function() {
+    var readable = String.fromCharCode.apply( null, new Uint16Array( reader.result ) );
+    var parsed = JSON.parse( readable );
+    console.log( 'parsed is', parsed );
+    // en vrai un truc comme au back ce sera mieux hein, maibon
+    switch( parsed._ ) {
+      case 'chat':
+        receiveChat.apply( window, parsed.d );
+        break;
+      
+      case 'ds':
+        chat.innerHTML += '<br/><i>' + parsed.d[ 0 ].p + ' left</i>';''
+        break;
+    }
+  });
+  reader.readAsArrayBuffer(messageEvent.data);
 }
 
 function receiveChat( data ) {
