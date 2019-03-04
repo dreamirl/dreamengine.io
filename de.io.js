@@ -93,13 +93,13 @@ const deio = {
   pool: function( poolName ) {
     if ( !this._pools[ poolName ] ) {
       console.warn( 'WARNING: You tried to get a pool that does not exist. Creating an empty pool to prevent code crash. PoolName is: ' + poolName );
-      this._pools = new Pool( poolName );
+      this._pools[ poolName ] = new Pool( poolName );
     }
     return this._pools[ poolName ];
   },
 
   // send to all connected ws
-  spread: function( msgName, data ) {
+  broadcast: function( msgName, data ) {
     for ( var i in this._connectedSockets ) {
       this._connectedSockets[ i ].send( { _: msgName, d: data } );
     }

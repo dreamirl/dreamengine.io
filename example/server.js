@@ -12,14 +12,14 @@ deio.onConnection = function( socket, request ) {
       d.nn = 1;
     }
     d.p = nickname;
-    deio.spread( 'chat', d )
+    deio.broadcast( 'chat', d )
   });
 
   socket.ondisconnect = function() {
-    deio.spread( 'ds', { p: nickname } );
+    deio.broadcast( 'ds', { p: nickname } );
   }
 
-  deio.spread( 'chat', { p: nickname, m: '', j: 1 } );
+  deio.broadcast( 'chat', { p: nickname, m: '', j: 1 } );
 };
 
 // this is globally registered

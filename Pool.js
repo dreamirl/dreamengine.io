@@ -11,7 +11,7 @@ function Pool( name ) {
 
   this.sockets = [];
 }
-Pool.prototype.spread = function( msgName, data ) {
+Pool.prototype.broadcast = function( msgName, data ) {
   for ( var i in this.sockets ) {
     this.sockets[ i ].send( { _: msgName, d: data } );
   }
