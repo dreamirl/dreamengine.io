@@ -161,6 +161,6 @@ const deio = {
       }
     } );
   }
-}
+};
 
 module.exports = deio;

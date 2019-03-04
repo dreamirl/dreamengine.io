@@ -22,9 +22,10 @@ DESocket.prototype = new SimpleSocket();
 DESocket.constructor = DESocket;
 DESocket.supr = SimpleSocket.prototype;
 
-DESocket.prototype._onOpen = function(){};
-DESocket.prototype._onMessage = function(){};
-DESocket.prototype._onClose = function(){};
+// to override
+DESocket.prototype.onOpen = function(){};
+DESocket.prototype.onMessage = function(){};
+DESocket.prototype.onClose = function(){};
 
 DESocket.prototype.connect = function( url ) {
   url = url || this.url;
@@ -32,9 +33,9 @@ DESocket.prototype.connect = function( url ) {
   this._ws = new WebSocket( url );
   this.url = url;
 
-  this._ws.onopen = () => this.onOpen();
-  this._ws.onmessage = ( msg ) => this.onMessage( msg );
-  this._ws.onclose = () => this.onClose.apply( this, arguments );
+  this._ws.onopen = () => this._onOpen();
+  this._ws.onmessage = ( msg ) => this._onMessage( msg );
+  this._ws.onclose = () => this._onClose.apply( this, arguments );
 };
 
 DESocket.prototype.keepAlive = function() {
@@ -44,7 +45,7 @@ DESocket.prototype.keepAlive = function() {
   this._ws.send( socketEncode( '1' ) ); // ping
 }
 
-DESocket.prototype.onOpen = function() {
+DESocket.prototype._onOpen = function() {
   if ( this.options.debug ) {
     console.log( 'socket connected' );
   }
@@ -52,20 +53,20 @@ DESocket.prototype.onOpen = function() {
   clearInterval( this.pingInterval );
   this.pingInterval = setInterval( () => this.keepAlive(), this.options.pingInterval );
 
-  this._onOpen();
+  this.onOpen();
 };
 
-DESocket.prototype.onMessage = function( msg ) {
+DESocket.prototype._onMessage = function( msg ) {
   var parsed = JSON.parse( msg.data );
 
   if ( this._events[ parsed._ ] ) {
     this._events[ parsed._ ]( parsed.d, msg );
   }
 
-  this._onMessage( parsed, msg );
+  this.onMessage( parsed, msg );
 };
 
-DESocket.prototype.onClose = function() {
+DESocket.prototype._onClose = function() {
   if ( this.options.debug ) {
     console.log('socket disconnected', arguments);
   }
@@ -74,7 +75,7 @@ DESocket.prototype.onClose = function() {
   // for now the socket try to reconnect indefinitively
   setTimeout( this.connect, 1000 );
   
-  this._onClose();
+  this.onClose();
 };
 
 DESocket.prototype.send = function( msgName, value ) {
