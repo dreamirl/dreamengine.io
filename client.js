@@ -42,6 +42,11 @@ DESocket.prototype.connect = function( url ) {
   this._ws.onclose = () => this._onClose.apply( this, arguments );
 };
 
+DESocket.prototype.disconnect = function() {
+  this.manualClose = true;
+  this._ws.close();
+};
+
 DESocket.prototype.keepAlive = function() {
   if ( this._ws.readyState !== this._ws.OPEN ) {
     return;
@@ -82,7 +87,9 @@ DESocket.prototype._onClose = function() {
 
   // TODO add condition to see the reason and decide what to do correctly
   // for now the socket try to reconnect indefinitively
-  setTimeout( () => this.connect(), 1000 );
+  if ( !this.manualClose ) {
+    setTimeout( () => this.connect(), 1000 );
+  }
   
   this.onClose();
 };
