@@ -91,6 +91,13 @@ const deio = {
     this._pools[ poolName ].removeSocket( socket );
   },
 
+  removePool: function( poolName ) {
+    if ( !this._pools[ poolName ] ) {
+      return;
+    }
+    delete this._pools[ poolName ]
+  },
+
   poolExists: function( poolName ) {
     return !!this._pools[ poolName ];
   },

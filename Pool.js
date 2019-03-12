@@ -20,6 +20,9 @@ Pool.prototype.addSocket = function( socket ) {
 Pool.prototype.removeSocket = function( socket ) {
   this.sockets.splice( this.sockets.indexOf( socket ), 1 );
 };
+Pool.prototype.removeAll = function() {
+  this.sockets = [];
+}
 
 // add a listener to every socket in this pool
 // TODO if the socket leave the pool, the it should also stop listening the events
