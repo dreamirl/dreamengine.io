@@ -11,8 +11,8 @@ function Pool( name ) {
 
   this.sockets = [];
 }
-Pool.prototype.broadcast = function( msgName, data ) {
-  this.sockets.forEach( soc => soc.send( msgName, data ) );
+Pool.prototype.broadcast = function( ) {
+  this.sockets.forEach( soc => soc.send.apply( soc, arguments ) );
 };
 Pool.prototype.addSocket = function( socket ) {
   this.sockets.push( socket );
