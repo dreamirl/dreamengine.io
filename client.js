@@ -36,6 +36,7 @@ DESocket.prototype.connect = function( url ) {
   this._ws = new WebSocket( url );
   this.url = url;
   this.id = null;
+  this._manualClose = false;
 
   this._ws.onopen = () => this._onOpen();
   this._ws.onmessage = ( msg ) => this._onMessage( msg );
@@ -43,8 +44,10 @@ DESocket.prototype.connect = function( url ) {
 };
 
 DESocket.prototype.disconnect = function() {
-  this.manualClose = true;
-  this._ws.close();
+  this._manualClose = true;
+  if( this._ws ) {
+    this._ws.close();
+  }
 };
 
 DESocket.prototype.keepAlive = function() {
@@ -87,7 +90,7 @@ DESocket.prototype._onClose = function() {
 
   // TODO add condition to see the reason and decide what to do correctly
   // for now the socket try to reconnect indefinitively
-  if ( !this.manualClose ) {
+  if ( !this._manualClose ) {
     setTimeout( () => this.connect(), 1000 );
   }
   
