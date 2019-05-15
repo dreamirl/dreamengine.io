@@ -15,7 +15,7 @@ function SimpleSocket(ws) {
   this.options = {};
   this.customData = {}; // store custom parameters, mostly dedicated to the game
 
-  this.ondisconnect = function(){ /* override me plz */ };
+  this.onDisconnect = function(){ /* override me plz */ };
 }
 SimpleSocket.prototype.listen = function( name, callback ) {
   if ( this._events[ name ] ) {
