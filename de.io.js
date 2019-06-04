@@ -25,12 +25,14 @@ const deio = {
   options: {
     useJSON: true
   },
+  connectionCount: 0,
 
   _pools: {},
   
   onConnection: function(){ /* override me plz */ },
 
   _registerSocket: function( ws, req ) {
+    this.connectionCount++;
     const soc = new SimpleSocket( ws );
     this._connectedSockets[ soc.id ] = soc;
     ws.id = soc.id;
@@ -39,6 +41,7 @@ const deio = {
   },
 
   _closeSocket: function( ws, code, message ) {
+    this.connectionCount--;
     this._connectedSockets[ ws.id ].isDisconnected = true;
     this._connectedSockets[ ws.id ].onDisconnect();
     this._connectedSockets[ ws.id ]._destroy( ws, code, message );
