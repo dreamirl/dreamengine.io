@@ -18,6 +18,8 @@ const uWS = require( 'uWebSockets.js' );
 const SimpleSocket = require( './SimpleSocket' );
 const Pool = require( './Pool' );
 
+const UPDATE_PLAYERS_ONLINE = "upo";
+
 const deio = {
   _connectedSockets: {},
   _events: {},
@@ -38,6 +40,7 @@ const deio = {
     ws.id = soc.id;
     soc.send( '1', soc.id );
     this.onConnection( soc, req );
+    this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
   },
 
   _closeSocket: function( ws, code, message ) {
@@ -47,6 +50,7 @@ const deio = {
     this._connectedSockets[ ws.id ]._destroy( ws, code, message );
     delete this._connectedSockets[ ws.id ];
     delete ws.id;
+    this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
     console.log( 'WebSocket closed and cleaned', code, message );
   },
 
