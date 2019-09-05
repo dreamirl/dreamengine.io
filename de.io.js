@@ -46,7 +46,7 @@ const deio = {
   _closeSocket: function( ws, code, message ) {
     this.connectionCount--;
     this._connectedSockets[ ws.id ].isDisconnected = true;
-    this._connectedSockets[ ws.id ].onDisconnect();
+    this._connectedSockets[ ws.id ].onDisconnect( ws );
     this._connectedSockets[ ws.id ]._destroy( ws, code, message );
     delete this._connectedSockets[ ws.id ];
     delete ws.id;
