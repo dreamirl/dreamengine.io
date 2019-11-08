@@ -37,6 +37,7 @@ DESocket.prototype.connect = function( url ) {
   this.url = url;
   this.id = null;
   this._manualClose = false;
+  this._open = false;
 
   this._ws.onopen = () => this._onOpen();
   this._ws.onmessage = ( msg ) => this._onMessage( msg );
@@ -62,10 +63,14 @@ DESocket.prototype._onOpen = function() {
     console.log( 'socket connected' );
   }
 
+  
   clearInterval( this.pingInterval );
   this.pingInterval = setInterval( () => this.keepAlive(), this.options.pingInterval );
-
-  this.onOpen();
+  
+  if(!this._open) {
+    this._open = true;
+    this.onOpen();
+  }
 };
 
 DESocket.prototype._onMessage = function( msg ) {
@@ -94,7 +99,10 @@ DESocket.prototype._onClose = function() {
     setTimeout( () => this.connect(), 1000 );
   }
   
-  this.onClose();
+  if(this._open) {
+    this._open = false;
+    this.onClose();
+  }
 };
 
 export default DESocket;
