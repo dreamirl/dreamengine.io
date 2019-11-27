@@ -137,7 +137,6 @@ const deio = {
       },
       message: ( ws, binaryMsg, isBinary ) => {
         var obj = decode(binaryMsg);
-        console.log(obj);
         if ( obj === '1' ) {
           // just ping
           return;

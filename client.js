@@ -78,7 +78,6 @@ DESocket.prototype._onMessage = function( msg ) {
   var reader = new FileReader();
   reader.addEventListener( 'loadend', () => {
     var obj = decode(reader.result);
-    console.log(reader.result);
 
     if ( this._events[ obj._ ] ) {
       this._events[ obj._ ].apply( this, obj.d );

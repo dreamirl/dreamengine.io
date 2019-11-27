@@ -53,7 +53,6 @@ SimpleSocket.prototype.send = function() {
     d: args
   });
 
-  console.log(encoded);
   this._ws.send(encoded, true );
 }
 
