@@ -1,10 +1,11 @@
+const encode = require('@msgpack/msgpack').encode;
+
 /**
  * A simple overlay over the native WebSocket to be more flexible
  * and ready to use
  * 
  * @param {WebSocket} ws 
  */
-const socketEncode = require( './socketEncode' );
 
 function SimpleSocket(ws) {
   this._ws = ws;
@@ -46,11 +47,14 @@ SimpleSocket.prototype.send = function() {
   if ( this.options.debug ) {
     console.log( 'sending', eventName, ': ', args );
   }
-  var str = socketEncode( JSON.stringify( {
+
+  var encoded = encode({
     _: eventName,
     d: args
-  } ) );
-  this._ws.send( str, true );
+  });
+
+  console.log(encoded);
+  this._ws.send(encoded, true );
 }
 
 module.exports = SimpleSocket;

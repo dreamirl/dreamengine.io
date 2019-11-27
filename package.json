@@ -9,6 +9,7 @@
   "author": "Inateno",
   "license": "ISC",
   "dependencies": {
+    "@msgpack/msgpack": "^1.9.3",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v15.5.0"
   }
 }

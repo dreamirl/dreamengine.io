@@ -1,5 +1,6 @@
+import {decode} from '@msgpack/msgpack';
+import {encode} from '@msgpack/msgpack';
 import SimpleSocket from './SimpleSocket';
-import socketEncode from './socketEncode';
 
 function DESocket( url, options ) 
 {
@@ -55,7 +56,7 @@ DESocket.prototype.keepAlive = function() {
   if ( this._ws.readyState !== this._ws.OPEN ) {
     return;
   }
-  this._ws.send( socketEncode( '1' ) ); // ping
+  this._ws.send( encode( { _:'1'} ) ); // ping
 }
 
 DESocket.prototype._onOpen = function() {
@@ -76,14 +77,14 @@ DESocket.prototype._onOpen = function() {
 DESocket.prototype._onMessage = function( msg ) {
   var reader = new FileReader();
   reader.addEventListener( 'loadend', () => {
-    var readable = String.fromCharCode.apply( null, new Uint16Array( reader.result ) );
-    var parsed = JSON.parse( readable );
+    var obj = decode(reader.result);
+    console.log(reader.result);
 
-    if ( this._events[ parsed._ ] ) {
-      this._events[ parsed._ ].apply( this, parsed.d );
+    if ( this._events[ obj._ ] ) {
+      this._events[ obj._ ].apply( this, obj.d );
     }
 
-    this.onMessage( parsed, msg );
+    this.onMessage( obj );
   } );
   reader.readAsArrayBuffer( msg.data );
 };

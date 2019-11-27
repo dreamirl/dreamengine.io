@@ -17,6 +17,7 @@
 const uWS = require( 'uWebSockets.js' );
 const SimpleSocket = require( './SimpleSocket' );
 const Pool = require( './Pool' );
+const decode = require('@msgpack/msgpack').decode;
 
 const UPDATE_PLAYERS_ONLINE = "upo";
 
@@ -38,7 +39,7 @@ const deio = {
     const soc = new SimpleSocket( ws );
     this._connectedSockets[ soc.id ] = soc;
     ws.id = soc.id;
-    soc.send( '1', soc.id );
+    soc.send('1');
     this.onConnection( soc, req );
     this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
   },
@@ -54,25 +55,15 @@ const deio = {
     console.log( 'WebSocket closed and cleaned', code, message );
   },
 
-  _onMessageEnter: function( ws, strMsg, binaryMsg ) {
-    var msg = strMsg;
-    
-    if ( this.options.useJSON ) {
-      msg = JSON.parse(strMsg); 
-    }
-    else {
-      // TODO no JSON = no message name, just one big function custom made
-      return;
-    }
-
+  _onMessageEnter: function( ws, obj ) {
     var socket = this._connectedSockets[ ws.id ];
 
-    if ( this._events[ msg._ ] ) {
-      this._events[ msg._ ].apply( this, [ socket ].concat( msg.d ) );
+    if ( this._events[ obj._ ] ) {
+      this._events[ obj._ ].apply( this, [ socket ].concat( obj.d ) );
     }
 
-    if ( socket._events[ msg._ ] ) {
-      socket._events[ msg._ ].apply( socket, msg.d );
+    if ( socket._events[ obj._ ] ) {
+      socket._events[ obj._ ].apply( socket, obj.d );
     }
   },
 
@@ -145,14 +136,14 @@ const deio = {
         deio._registerSocket( ws, req );
       },
       message: ( ws, binaryMsg, isBinary ) => {
-        var parsed = String.fromCharCode.apply( null, new Uint16Array( binaryMsg ) );
-        if ( parsed === '1' ) {
+        var obj = decode(binaryMsg);
+        console.log(obj);
+        if ( obj === '1' ) {
           // just ping
           return;
         }
     
-        // console.log('message received from ' + ws.id, binaryMsg, isBinary, parsed);
-        deio._onMessageEnter( ws, parsed, binaryMsg );
+        deio._onMessageEnter( ws, obj );
         
         // TODO
         /* Ok is false if backpressure was built up, wait for drain */
