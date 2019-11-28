@@ -18,7 +18,7 @@ function DESocket( url, options )
   }
   this.url = url;
 
-  this.listen( '1', id => this.id = id );
+  this.listen( 'id', id => this.id = id );
   return this;
 }
 
@@ -64,7 +64,6 @@ DESocket.prototype._onOpen = function() {
     console.log( 'socket connected' );
   }
 
-  
   clearInterval( this.pingInterval );
   this.pingInterval = setInterval( () => this.keepAlive(), this.options.pingInterval );
   
@@ -78,6 +77,8 @@ DESocket.prototype._onMessage = function( msg ) {
   var reader = new FileReader();
   reader.addEventListener( 'loadend', () => {
     var obj = decode(reader.result);
+
+    //console.log(JSON.stringify(obj));
 
     if ( this._events[ obj._ ] ) {
       this._events[ obj._ ].apply( this, obj.d );

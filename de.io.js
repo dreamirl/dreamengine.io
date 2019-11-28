@@ -39,7 +39,7 @@ const deio = {
     const soc = new SimpleSocket( ws );
     this._connectedSockets[ soc.id ] = soc;
     ws.id = soc.id;
-    soc.send('1');
+    soc.send('id', ws.id);
     this.onConnection( soc, req );
     this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
   },
@@ -137,6 +137,9 @@ const deio = {
       },
       message: ( ws, binaryMsg, isBinary ) => {
         var obj = decode(binaryMsg);
+
+        //console.log(JSON.stringify(obj));
+
         if ( obj === '1' ) {
           // just ping
           return;
