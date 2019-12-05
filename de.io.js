@@ -19,8 +19,6 @@ const SimpleSocket = require( './SimpleSocket' );
 const Pool = require( './Pool' );
 const decode = require('@msgpack/msgpack').decode;
 
-const UPDATE_PLAYERS_ONLINE = "upo";
-
 const deio = {
   _connectedSockets: {},
   _events: {},
@@ -41,17 +39,16 @@ const deio = {
     ws.id = soc.id;
     soc.send('id', ws.id);
     this.onConnection( soc, req );
-    this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
   },
 
   _closeSocket: function( ws, code, message ) {
     this.connectionCount--;
+    this._connectedSockets[ ws.id ].pools.forEach(pName => this.leavePool(pName, this._connectedSockets[ ws.id ]));
     this._connectedSockets[ ws.id ].isDisconnected = true;
     this._connectedSockets[ ws.id ].onDisconnect( ws );
     this._connectedSockets[ ws.id ]._destroy( ws, code, message );
     delete this._connectedSockets[ ws.id ];
     delete ws.id;
-    this.broadcast( UPDATE_PLAYERS_ONLINE, this.connectionCount );
     console.log( 'WebSocket closed and cleaned', code, message );
   },
 
@@ -72,6 +69,15 @@ const deio = {
       console.warn( 'WARNING: Overriding the event ' + name );
     }
     this._events[ name ] = callback;
+  },
+
+  createPool: function(poolName) {
+    if (this._pools[poolName] ) {
+      console.error('deio createPool, the pool ' + poolName + ' already exists');
+      return Promise.reject('pool_exists');
+    }
+    this._pools[ poolName ] = new Pool( poolName );
+    return Promise.resolve(this._pools[ poolName ]);
   },
 
   // need pools like in socket.io
