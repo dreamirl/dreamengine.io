@@ -9,12 +9,14 @@ const encode = require('@msgpack/msgpack').encode;
 
 function SimpleSocket(ws) {
   this._ws = ws;
+  this._manualClose = false;
   this.id = Date.now(); // imrpove this
   this._events = {};
   this.isDisconnected = false;
 
   this.options = {};
   this.customData = {}; // store custom parameters, mostly dedicated to the game
+  this.pools = []; // current joined pools
 
   this.onDisconnect = function(){ /* override me plz */ };
 }
@@ -54,6 +56,20 @@ SimpleSocket.prototype.send = function() {
   });
 
   this._ws.send(encoded, true );
-}
+};
+
+SimpleSocket.prototype.disconnect = function(code, shortMessage) {
+  this._manualClose = true;
+  if( this._ws ) {
+    this._ws.end(code, shortMessage);
+  }
+};
+
+SimpleSocket.prototype.close = function() {
+  this._manualClose = true;
+  if( this._ws ) {
+    this._ws.close();
+  }
+};
 
 module.exports = SimpleSocket;

@@ -16,11 +16,14 @@ Pool.prototype.broadcast = function( ) {
 };
 Pool.prototype.addSocket = function( socket ) {
   this.sockets.push( socket );
+  socket.pools.push( this.id );
 };
 Pool.prototype.removeSocket = function( socket ) {
   this.sockets.splice( this.sockets.indexOf( socket ), 1 );
+  socket.pools.splice( socket.pools.indexOf( this.id ), 1 );
 };
 Pool.prototype.removeAll = function() {
+  this.sockets.forEach(soc => soc.pools.splice( soc.pools.indexOf( this.id ), 1 ));
   this.sockets = [];
 }
 

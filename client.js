@@ -37,19 +37,11 @@ DESocket.prototype.connect = function( url ) {
   this._ws = new WebSocket( url );
   this.url = url;
   this.id = null;
-  this._manualClose = false;
   this._open = false;
 
   this._ws.onopen = () => this._onOpen();
   this._ws.onmessage = ( msg ) => this._onMessage( msg );
-  this._ws.onclose = () => this._onClose.apply( this, arguments );
-};
-
-DESocket.prototype.disconnect = function() {
-  this._manualClose = true;
-  if( this._ws ) {
-    this._ws.close();
-  }
+  this._ws.onclose = (event) => this._onClose(event);
 };
 
 DESocket.prototype.keepAlive = function() {
@@ -89,7 +81,7 @@ DESocket.prototype._onMessage = function( msg ) {
   reader.readAsArrayBuffer( msg.data );
 };
 
-DESocket.prototype._onClose = function() {
+DESocket.prototype._onClose = function(event) {
   if ( this.options.debug ) {
     console.log('socket disconnected', arguments);
   }
@@ -100,9 +92,9 @@ DESocket.prototype._onClose = function() {
     setTimeout( () => this.connect(), 1000 );
   }
   
-  if(this._open) {
+  if (this._open) {
     this._open = false;
-    this.onClose();
+    this.onClose(event);
   }
 };
 
