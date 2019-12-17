@@ -32,6 +32,7 @@ SimpleSocket.prototype.stopListening = function( name ) {
 
 SimpleSocket.prototype._destroy = function( ws, code, message ) {
   delete this._ws;
+  this._ws = null;
   for ( var e in this._events ) {
     delete this._events[ e ];
   }
@@ -39,14 +40,14 @@ SimpleSocket.prototype._destroy = function( ws, code, message ) {
 };
 
 SimpleSocket.prototype.send = function() {
-  if ( this.isDisconnected ) {
+  if (this.isDisconnected) {
     return;
   }
 
   var args = Array.prototype.slice.call( arguments );
   var eventName = args.shift();
 
-  if ( this.options.debug ) {
+  if (this.options.debug) {
     console.log( 'sending', eventName, ': ', args );
   }
 
@@ -58,18 +59,24 @@ SimpleSocket.prototype.send = function() {
   this._ws.send(encoded, true );
 };
 
+// disconnect and close can be called even after the close event
+// it can be a dev mistake but also the game-server won't wait for client to disconnect with an infinite time
+// so the good practice is to send to client "please disconnect" and after X ms if it does not, kill it.
+// Nb: this is a good practice because client make a difference with "connection lost" and "I left the server"
 SimpleSocket.prototype.disconnect = function(code, shortMessage) {
-  this._manualClose = true;
-  if( this._ws ) {
-    this._ws.end(code, shortMessage);
+  if (this.isDisconnected) {
+    return;
   }
+  this._manualClose = true;
+  this._ws.end(code, shortMessage)
 };
 
 SimpleSocket.prototype.close = function() {
-  this._manualClose = true;
-  if( this._ws ) {
-    this._ws.close();
+  if (this.isDisconnected) {
+    return;
   }
+  this._manualClose = true;
+  this._ws.close();
 };
 
 module.exports = SimpleSocket;

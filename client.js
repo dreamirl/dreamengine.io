@@ -98,4 +98,7 @@ DESocket.prototype._onClose = function(event) {
   }
 };
 
+// only one way to disconnect on front
+DESocket.prototype.disconnect = SimpleSocket.prototype.close;
+
 export default DESocket;
