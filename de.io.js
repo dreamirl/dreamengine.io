@@ -169,11 +169,8 @@ const deio = {
     })
     // TODO, should be able to listen severals and customized routes
     .any( '/*', ( res, req ) => {
-      res.writeStatus('200 OK').end( 'Nothing to see here!' );
+      res.end( 'Nothing to see here!' );
     } )
-    .get('/*', (req, res) => {
-      res.writeStatus('200 OK').end('Not allowed');
-    })
     .listen( port, ( token ) => {
       if ( token ) {
         console.log( 'Listening to port ' + port );
