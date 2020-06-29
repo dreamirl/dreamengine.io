@@ -167,12 +167,8 @@ const deio = {
         deio._closeSocket( ws, code, message );
       }
     })
-    // TODO, should be able to listen severals and customized routes
-    .any( '/*', ( res, req ) => {
-      res.writeStatus('200 OK').end( 'Nothing to see here!' );
-    } )
-    .get('/*', (req, res) => {
-      res.writeStatus('200 OK').end('Not allowed');
+    .get('/*', (res, req) => {
+      res.writeStatus('200 OK').end('Are you lost ?');
     })
     .listen( port, ( token ) => {
       if ( token ) {
