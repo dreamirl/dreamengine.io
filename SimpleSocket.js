@@ -71,8 +71,11 @@ SimpleSocket.prototype.disconnect = function(code, shortMessage) {
 
   // https://unetworking.github.io/uWebSockets.js/generated/interfaces/websocket.html#end
   // end is undefined actually, why ??
-  // this._ws.end(code, shortMessage);
-  this._ws.close();
+  if (this._ws.end) {
+    this._ws.end(code, shortMessage);
+  } else {
+    this._ws.close();
+  }
 };
 
 SimpleSocket.prototype.close = function() {
