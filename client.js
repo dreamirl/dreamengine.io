@@ -86,15 +86,14 @@ DESocket.prototype._onClose = function(event) {
     console.log('socket disconnected', arguments);
   }
 
-  // TODO add condition to see the reason and decide what to do correctly
-  // for now the socket try to reconnect indefinitively
-  if ( !this._manualClose ) {
-    setTimeout( () => this.connect(), 1000 );
-  }
-  
   if (this._open) {
     this._open = false;
     this.onClose(event);
+  }
+
+  // if the socket is not tagged as "_manualClose", it will try to reconnect indefinitively
+  if ( !this._manualClose ) {
+    setTimeout( () => this.connect(), 1000 );
   }
 };
 
