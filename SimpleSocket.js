@@ -3,8 +3,8 @@ const encode = require('@msgpack/msgpack').encode;
 /**
  * A simple overlay over the native WebSocket to be more flexible
  * and ready to use
- * 
- * @param {WebSocket} ws 
+ *
+ * @param {WebSocket} ws
  */
 
 function SimpleSocket(ws) {
@@ -18,23 +18,25 @@ function SimpleSocket(ws) {
   this.customData = {}; // store custom parameters, mostly dedicated to the game
   this.pools = []; // current joined pools
 
-  this.onDisconnect = function(){ /* override me plz */ };
+  this.onDisconnect = function() {
+    /* override me plz */
+  };
 }
-SimpleSocket.prototype.listen = function( name, callback ) {
-  if ( this._events[ name ] ) {
-    console.warn( 'WARNING: Overriding the event ' + name );
+SimpleSocket.prototype.listen = function(name, callback) {
+  if (this._events[name]) {
+    console.warn('WARNING: Overriding the event ' + name);
   }
-  this._events[ name ] = callback;
+  this._events[name] = callback;
 };
-SimpleSocket.prototype.stopListening = function( name ) {
-  delete this._events[ name ];
+SimpleSocket.prototype.stopListening = function(name) {
+  delete this._events[name];
 };
 
-SimpleSocket.prototype._destroy = function( ws, code, message ) {
+SimpleSocket.prototype._destroy = function(ws, code, message) {
   delete this._ws;
   this._ws = null;
-  for ( var e in this._events ) {
-    delete this._events[ e ];
+  for (var e in this._events) {
+    delete this._events[e];
   }
   this._events = null;
 };
@@ -44,19 +46,19 @@ SimpleSocket.prototype.send = function() {
     return;
   }
 
-  var args = Array.prototype.slice.call( arguments );
+  var args = Array.prototype.slice.call(arguments);
   var eventName = args.shift();
 
   if (this.options.debug) {
-    console.log( 'sending', eventName, ': ', args );
+    console.log('sending', eventName, ': ', args);
   }
 
   var encoded = encode({
     _: eventName,
-    d: args
+    d: args,
   });
 
-  this._ws.send(encoded, true );
+  this._ws.send(encoded, true);
 };
 
 // disconnect and close can be called even after the close event
