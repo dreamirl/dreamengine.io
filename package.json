@@ -13,7 +13,7 @@
   "author": "Inateno",
   "license": "ISC",
   "dependencies": {
-    "@msgpack/msgpack": "^1.9.3",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.4.0"
+    "@msgpack/msgpack": "^1.12.2",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0"
   }
 }
