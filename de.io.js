@@ -30,17 +30,48 @@ const deio = {
 
   _pools: {},
 
+  onUpgrade: async function(res, req, context) {
+    return true;
+  },
+
   onConnection: function() {
     /* override me plz */
   },
 
-  _registerSocket: function(ws, req) {
+  _upgradeSocket: async function(res, req, context) {
+    const upgradeAborted = { aborted: false };
+    res.onAborted(() => {
+      /* We can simply signal that we were aborted */
+      upgradeAborted.aborted = true;
+    });
+
+    try {
+      const userData = await this.onUpgrade(res, req, context);
+
+      if (userData && !upgradeAborted.aborted) {
+        res.upgrade(Object.assign({
+            url: req.getUrl()
+          }, userData),
+          /* Spell these correctly */
+          req.getHeader('sec-websocket-key'),
+          req.getHeader('sec-websocket-protocol'),
+          req.getHeader('sec-websocket-extensions'),
+          context
+        );
+      }
+    } catch (e) {
+      res.end(e);
+      return;
+    }
+  },
+
+  _registerSocket: function(ws) {
     this.connectionCount++;
     const soc = new SimpleSocket(ws);
     this._connectedSockets[soc.id] = soc;
     ws.id = soc.id;
     soc.send('id', ws.id);
-    this.onConnection(soc, req);
+    this.onConnection(soc);
   },
 
   _closeSocket: function(ws, code, message) {
@@ -146,12 +177,17 @@ const deio = {
         maxPayloadLength: options.maxPayloadLength || 16 * 1024 * 1024,
         idleTimeout: options.idleTimeout || 10,
         /* Handlers */
-        open: (ws, req) => {
-          console.log('A WebSocket connected via URL: ' + req.getUrl());
+        upgrade: (res, req, context) => {
+          console.log('A WebSocket connected via URL: ', req.getUrl());
+
+          deio._upgradeSocket(res, req, context);
+        },
+        // after upgrade event
+        open: (ws) => {
 
           // looks like sockets have no id or hash
           // need to create it and store it
-          deio._registerSocket(ws, req);
+          deio._registerSocket(ws);
         },
         message: (ws, binaryMsg, isBinary) => {
           var obj = decode(binaryMsg);
