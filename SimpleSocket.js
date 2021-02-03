@@ -15,7 +15,7 @@ function SimpleSocket(ws) {
   this.isDisconnected = false;
 
   this.options = {};
-  this.customData = {}; // store custom parameters, mostly dedicated to the game
+  this.customData = Object.assign({}, ws.customData || {}); // store custom parameters, mostly dedicated to the game
   this.pools = []; // current joined pools
 
   this.onDisconnect = function() {
