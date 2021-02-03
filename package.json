@@ -1,6 +1,6 @@
 {
   "name": "@dreamirl/dreamengine.io",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "A WebSockets implementation over uWebSockets designed for high-perfs-games",
   "main": "de.io.js",
   "devDependencies": {

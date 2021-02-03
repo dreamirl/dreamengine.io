@@ -30,7 +30,7 @@ const deio = {
 
   _pools: {},
 
-  onUpgrade: async function(res, req, context) {
+  onUpgrade: async function(requestData) {
     return true;
   },
 
@@ -45,23 +45,35 @@ const deio = {
       upgradeAborted.aborted = true;
     });
 
-    try {
-      const userData = await this.onUpgrade(res, req, context);
+    const reqData = {
+      query: req.getQuery(),
+      url: req.getUrl(),
+    };
 
+    const secWebSocketKey = req.getHeader('sec-websocket-key');
+    const secWebSocketProtocol = req.getHeader('sec-websocket-protocol');
+    const secWebSocketExtensions = req.getHeader('sec-websocket-extensions');
+
+    try {
+      const userData = await this.onUpgrade(reqData);
       if (userData && !upgradeAborted.aborted) {
-        res.upgrade(Object.assign({
-            url: req.getUrl()
+        return res.upgrade(Object.assign({
+            url: reqData.url,
           }, userData),
           /* Spell these correctly */
-          req.getHeader('sec-websocket-key'),
-          req.getHeader('sec-websocket-protocol'),
-          req.getHeader('sec-websocket-extensions'),
+          secWebSocketKey,
+          secWebSocketProtocol,
+          secWebSocketExtensions,
           context
         );
       }
+      console.error('Unable to upgrade the socket:: noData or user aborted');
+      if (!upgradeAborted.aborted) {
+        res.end('NO DATA');
+      }
     } catch (e) {
+      console.error('Unable to upgrade the socket::', e);
       res.end(e);
-      return;
     }
   },
 
