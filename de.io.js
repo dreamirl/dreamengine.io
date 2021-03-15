@@ -18,6 +18,7 @@ const uWS = require('uWebSockets.js');
 const SimpleSocket = require('./SimpleSocket');
 const Pool = require('./Pool');
 const decode = require('@msgpack/msgpack').decode;
+const encode = require('@msgpack/msgpack').encode;
 
 const deio = {
   _connectedSockets: {},
@@ -99,15 +100,25 @@ const deio = {
     console.log('WebSocket closed and cleaned', code, message);
   },
 
+  _respondToPing: function(socket, obj) {
+    var encoded = encode(obj);
+  
+    socket.send(encoded, true);
+  },
+
   _onMessageEnter: function(ws, obj) {
     var socket = this._connectedSockets[ws.id];
 
-    if (this._events[obj._]) {
-      this._events[obj._].apply(this, [socket].concat(obj.d));
-    }
-
-    if (socket._events[obj._]) {
-      socket._events[obj._].apply(socket, obj.d);
+    if(obj._ == "ping") {
+      this._respondToPing(ws, obj);
+    } else {
+      if (this._events[obj._]) {
+        this._events[obj._].apply(this, [socket].concat(obj.d));
+      }
+  
+      if (socket._events[obj._]) {
+        socket._events[obj._].apply(socket, obj.d);
+      }
     }
   },
 
@@ -205,11 +216,6 @@ const deio = {
           var obj = decode(binaryMsg);
 
           //console.log(JSON.stringify(obj));
-
-          if (obj === '1') {
-            // just ping
-            return;
-          }
 
           deio._onMessageEnter(ws, obj);
 

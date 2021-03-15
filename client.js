@@ -7,9 +7,11 @@ function DESocket(url, options) {
 
   this.id = null; // automatically pushed by server
   this.options = {
-    pingInterval: 5000,
+    pingInterval: 500,
     debug: false,
   };
+  this.pingRecords = [];
+  this.bufferSize = 6;
 
   options = options || {};
   for (var i in options) {
@@ -43,11 +45,13 @@ DESocket.prototype.connect = function(url) {
   this._ws.onclose = (event) => this._onClose(event);
 };
 
-DESocket.prototype.keepAlive = function() {
+DESocket.prototype.onUpdatePing = () => {};
+
+DESocket.prototype.checkPing = function() {
   if (this._ws.readyState !== this._ws.OPEN) {
     return;
   }
-  this._ws.send(encode({ _: '1' })); // ping
+  this._ws.send(encode({ _: 'ping', d: [Date.now()] }));
 };
 
 DESocket.prototype._onOpen = function() {
@@ -57,7 +61,7 @@ DESocket.prototype._onOpen = function() {
 
   clearInterval(this.pingInterval);
   this.pingInterval = setInterval(
-    () => this.keepAlive(),
+    () => this.checkPing(),
     this.options.pingInterval,
   );
 
@@ -67,6 +71,17 @@ DESocket.prototype._onOpen = function() {
   }
 };
 
+DESocket.prototype._updatePing = function(oldTimeStamp) {
+  var delay = Date.now() - oldTimeStamp;
+  this.latestPing = delay;
+  this.pingRecords.push(delay)
+  if(this.pingRecords.length > this.bufferSize) {
+    this.pingRecords.splice(0, this.pingRecords.length - this.bufferSize)
+  }
+  this.medianPing = Math.floor(this.pingRecords.reduce((a, b) => a + b) / this.pingRecords.length);
+  this.onUpdatePing(this.latestPing, this.medianPing);
+}
+
 DESocket.prototype._onMessage = function(msg) {
   var reader = new FileReader();
   reader.addEventListener('loadend', () => {
@@ -74,7 +89,9 @@ DESocket.prototype._onMessage = function(msg) {
 
     //console.log(JSON.stringify(obj));
 
-    if (this._events[obj._]) {
+    if(obj._ == 'ping') {
+      this._updatePing(obj.d[0])
+    } else if (this._events[obj._]) {
       this._events[obj._].apply(this, obj.d);
     }
 
