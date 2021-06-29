@@ -88,6 +88,7 @@ const deio = {
   },
 
   _closeSocket: function(ws, code, message) {
+    if (!this._connectedSockets[ws.id]) return console.error("WebSocket tried to be closed but doesn't exists");
     this.connectionCount--;
     this._connectedSockets[ws.id].pools.forEach((pName) =>
       this.leavePool(pName, this._connectedSockets[ws.id]),
