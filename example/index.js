@@ -8,7 +8,7 @@ function connect() {
   var nick = document.getElementById('nick');
   var btn = document.getElementById('btn');
 
-  btn.onclick = function() {
+  btn.onclick = function () {
     var d = {
       m: input.value,
       p: nick.value,
@@ -19,12 +19,12 @@ function connect() {
 
   socket = new WebSocket('ws://localhost:9000');
   // socket.binaryType = 'arraybuffer';
-  socket.onopen = function() {
+  socket.onopen = function () {
     console.log('connection open', arguments);
     tries = 0;
   };
   socket.onmessage = handleReceive;
-  socket.onclose = function() {
+  socket.onclose = function () {
     console.log('disconnected because: ', arguments);
 
     ++tries;
@@ -34,7 +34,7 @@ function connect() {
     }
     setTimeout(connect, 1000);
   };
-  setInterval(function() {
+  setInterval(function () {
     if (socket.readyState !== socket.OPEN) {
       return;
     }
@@ -67,7 +67,7 @@ function send() {
 
 function handleReceive(messageEvent) {
   var reader = new FileReader();
-  reader.addEventListener('loadend', function() {
+  reader.addEventListener('loadend', function () {
     var readable = String.fromCharCode.apply(
       null,
       new Uint16Array(reader.result),

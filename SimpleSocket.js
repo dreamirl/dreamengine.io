@@ -18,21 +18,21 @@ function SimpleSocket(ws) {
   this.customData = Object.assign({}, ws ? ws.customData || {} : {}); // store custom parameters, mostly dedicated to the game
   this.pools = []; // current joined pools
 
-  this.onDisconnect = function() {
+  this.onDisconnect = function () {
     /* override me plz */
   };
 }
-SimpleSocket.prototype.listen = function(name, callback) {
+SimpleSocket.prototype.listen = function (name, callback) {
   if (this._events[name]) {
     console.warn('WARNING: Overriding the event ' + name);
   }
   this._events[name] = callback;
 };
-SimpleSocket.prototype.stopListening = function(name) {
+SimpleSocket.prototype.stopListening = function (name) {
   delete this._events[name];
 };
 
-SimpleSocket.prototype._destroy = function(ws, code, message) {
+SimpleSocket.prototype._destroy = function (ws, code, message) {
   delete this._ws;
   this._ws = null;
   for (var e in this._events) {
@@ -41,7 +41,7 @@ SimpleSocket.prototype._destroy = function(ws, code, message) {
   this._events = null;
 };
 
-SimpleSocket.prototype.send = function() {
+SimpleSocket.prototype.send = function () {
   if (this.isDisconnected) {
     return;
   }
@@ -65,7 +65,7 @@ SimpleSocket.prototype.send = function() {
 // it can be a dev mistake but also the game-server won't wait for client to disconnect with an infinite time
 // so the good practice is to send to client "please disconnect" and after X ms if it does not, kill it.
 // Nb: this is a good practice because client make a difference with "connection lost" and "I left the server"
-SimpleSocket.prototype.disconnect = function(code, shortMessage) {
+SimpleSocket.prototype.disconnect = function (code, shortMessage) {
   if (this.isDisconnected) {
     return;
   }
@@ -80,7 +80,7 @@ SimpleSocket.prototype.disconnect = function(code, shortMessage) {
   }
 };
 
-SimpleSocket.prototype.close = function() {
+SimpleSocket.prototype.close = function () {
   if (this.isDisconnected) {
     return;
   }

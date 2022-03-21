@@ -31,15 +31,15 @@ const deio = {
 
   _pools: {},
 
-  onUpgrade: async function(requestData) {
+  onUpgrade: async function (requestData) {
     return true;
   },
 
-  onConnection: function() {
+  onConnection: function () {
     /* override me plz */
   },
 
-  _upgradeSocket: async function(res, req, context) {
+  _upgradeSocket: async function (res, req, context) {
     const upgradeAborted = { aborted: false };
     res.onAborted(() => {
       /* We can simply signal that we were aborted */
@@ -58,14 +58,18 @@ const deio = {
     try {
       const userData = await this.onUpgrade(reqData);
       if (userData && !upgradeAborted.aborted) {
-        return res.upgrade(Object.assign({
-            url: reqData.url,
-          }, userData),
+        return res.upgrade(
+          Object.assign(
+            {
+              url: reqData.url,
+            },
+            userData,
+          ),
           /* Spell these correctly */
           secWebSocketKey,
           secWebSocketProtocol,
           secWebSocketExtensions,
-          context
+          context,
         );
       }
       console.error('Unable to upgrade the socket:: noData or user aborted');
@@ -78,7 +82,7 @@ const deio = {
     }
   },
 
-  _registerSocket: function(ws) {
+  _registerSocket: function (ws) {
     this.connectionCount++;
     const soc = new SimpleSocket(ws);
     this._connectedSockets[soc.id] = soc;
@@ -87,8 +91,9 @@ const deio = {
     this.onConnection(soc);
   },
 
-  _closeSocket: function(ws, code, message) {
-    if (!this._connectedSockets[ws.id]) return console.error("WebSocket tried to be closed but doesn't exists");
+  _closeSocket: function (ws, code, message) {
+    if (!this._connectedSockets[ws.id])
+      return console.error("WebSocket tried to be closed but doesn't exists");
     this.connectionCount--;
     this._connectedSockets[ws.id].pools.forEach((pName) =>
       this.leavePool(pName, this._connectedSockets[ws.id]),
@@ -101,36 +106,36 @@ const deio = {
     console.log('WebSocket closed and cleaned', code, message);
   },
 
-  _respondToPing: function(socket, obj) {
+  _respondToPing: function (socket, obj) {
     var encoded = encode(obj);
-  
+
     socket.send(encoded, true);
   },
 
-  _onMessageEnter: function(ws, obj) {
+  _onMessageEnter: function (ws, obj) {
     var socket = this._connectedSockets[ws.id];
 
-    if(obj._ == "ping") {
+    if (obj._ == 'ping') {
       this._respondToPing(ws, obj);
     } else {
       if (this._events[obj._]) {
         this._events[obj._].apply(this, [socket].concat(obj.d));
       }
-  
+
       if (socket._events[obj._]) {
         socket._events[obj._].apply(socket, obj.d);
       }
     }
   },
 
-  listen: function(name, callback) {
+  listen: function (name, callback) {
     if (this._events[name]) {
       console.warn('WARNING: Overriding the event ' + name);
     }
     this._events[name] = callback;
   },
 
-  createPool: function(poolName) {
+  createPool: function (poolName) {
     if (this._pools[poolName]) {
       console.error(
         'deio createPool, the pool ' + poolName + ' already exists',
@@ -142,32 +147,32 @@ const deio = {
   },
 
   // need pools like in socket.io
-  joinPool: function(poolName, socket) {
+  joinPool: function (poolName, socket) {
     if (!this._pools[poolName]) {
       this._pools[poolName] = new Pool(poolName);
     }
     this._pools[poolName].addSocket(socket);
   },
 
-  leavePool: function(poolName, socket) {
+  leavePool: function (poolName, socket) {
     if (!this._pools[poolName]) {
       return;
     }
     this._pools[poolName].removeSocket(socket);
   },
 
-  removePool: function(poolName) {
+  removePool: function (poolName) {
     if (!this._pools[poolName]) {
       return;
     }
     delete this._pools[poolName];
   },
 
-  poolExists: function(poolName) {
+  poolExists: function (poolName) {
     return !!this._pools[poolName];
   },
 
-  pool: function(poolName) {
+  pool: function (poolName) {
     if (!this._pools[poolName]) {
       console.warn(
         'WARNING: You tried to get a pool that does not exist. Creating an empty pool to prevent code crash. PoolName is: ' +
@@ -179,7 +184,7 @@ const deio = {
   },
 
   // send to all connected ws
-  broadcast: function() {
+  broadcast: function () {
     for (var i in this._connectedSockets) {
       this._connectedSockets[i].send.apply(
         this._connectedSockets[i],
@@ -188,7 +193,7 @@ const deio = {
     }
   },
 
-  startApp: function(port, options) {
+  startApp: function (port, options) {
     this._app = uWS[options.ssl ? 'SSLApp' : 'App']({
       key_file_name: options.key_perm,
       cert_file_name: options.cert_perm,
@@ -208,7 +213,6 @@ const deio = {
         },
         // after upgrade event
         open: (ws) => {
-
           // looks like sockets have no id or hash
           // need to create it and store it
           deio._registerSocket(ws);

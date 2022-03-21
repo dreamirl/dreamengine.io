@@ -11,18 +11,18 @@ function Pool(name) {
 
   this.sockets = [];
 }
-Pool.prototype.broadcast = function() {
+Pool.prototype.broadcast = function () {
   this.sockets.forEach((soc) => soc.send.apply(soc, arguments));
 };
-Pool.prototype.addSocket = function(socket) {
+Pool.prototype.addSocket = function (socket) {
   this.sockets.push(socket);
   socket.pools.push(this.id);
 };
-Pool.prototype.removeSocket = function(socket) {
+Pool.prototype.removeSocket = function (socket) {
   this.sockets.splice(this.sockets.indexOf(socket), 1);
   socket.pools.splice(socket.pools.indexOf(this.id), 1);
 };
-Pool.prototype.removeAll = function() {
+Pool.prototype.removeAll = function () {
   this.sockets.forEach((soc) =>
     soc.pools.splice(soc.pools.indexOf(this.id), 1),
   );
@@ -32,7 +32,7 @@ Pool.prototype.removeAll = function() {
 // add a listener to every socket in this pool
 // TODO if the socket leave the pool, the it should also stop listening the events
 // registered from the pool (?)
-Pool.prototype.listen = function(name, callback) {
+Pool.prototype.listen = function (name, callback) {
   this.sockets.forEach((soc) => soc.listen(name, callback));
 };
 

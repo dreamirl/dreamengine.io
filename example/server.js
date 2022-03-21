@@ -1,7 +1,7 @@
 const deio = require('../de.io');
 
 // this detect when a new connection appear
-deio.onConnection = function(socket, request) {
+deio.onConnection = function (socket, request) {
   var nickname = 'guest' + socket.id.toString().slice(8, 12);
 
   // this is only attached to  this specific socket
@@ -15,7 +15,7 @@ deio.onConnection = function(socket, request) {
     deio.broadcast('chat', d);
   });
 
-  socket.ondisconnect = function() {
+  socket.ondisconnect = function () {
     deio.broadcast('ds', { p: nickname });
   };
 

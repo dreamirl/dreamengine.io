@@ -28,11 +28,11 @@ DESocket.constructor = DESocket;
 DESocket.supr = SimpleSocket.prototype;
 
 // to override
-DESocket.prototype.onOpen = function() {};
-DESocket.prototype.onMessage = function() {};
-DESocket.prototype.onClose = function() {};
+DESocket.prototype.onOpen = function () {};
+DESocket.prototype.onMessage = function () {};
+DESocket.prototype.onClose = function () {};
 
-DESocket.prototype.connect = function(url) {
+DESocket.prototype.connect = function (url) {
   url = url || this.url;
 
   this._ws = new WebSocket(url);
@@ -47,14 +47,14 @@ DESocket.prototype.connect = function(url) {
 
 DESocket.prototype.onUpdatePing = () => {};
 
-DESocket.prototype.checkPing = function() {
+DESocket.prototype.checkPing = function () {
   if (this._ws.readyState !== this._ws.OPEN) {
     return;
   }
   this._ws.send(encode({ _: 'ping', d: [Date.now()] }));
 };
 
-DESocket.prototype._onOpen = function() {
+DESocket.prototype._onOpen = function () {
   if (this.options.debug) {
     console.log('socket connected');
   }
@@ -71,26 +71,28 @@ DESocket.prototype._onOpen = function() {
   }
 };
 
-DESocket.prototype._updatePing = function(oldTimeStamp) {
+DESocket.prototype._updatePing = function (oldTimeStamp) {
   var delay = Date.now() - oldTimeStamp;
   this.latestPing = delay;
-  this.pingRecords.push(delay)
-  if(this.pingRecords.length > this.bufferSize) {
-    this.pingRecords.splice(0, this.pingRecords.length - this.bufferSize)
+  this.pingRecords.push(delay);
+  if (this.pingRecords.length > this.bufferSize) {
+    this.pingRecords.splice(0, this.pingRecords.length - this.bufferSize);
   }
-  this.medianPing = Math.floor(this.pingRecords.reduce((a, b) => a + b) / this.pingRecords.length);
+  this.medianPing = Math.floor(
+    this.pingRecords.reduce((a, b) => a + b) / this.pingRecords.length,
+  );
   this.onUpdatePing(this.latestPing, this.medianPing);
-}
+};
 
-DESocket.prototype._onMessage = function(msg) {
+DESocket.prototype._onMessage = function (msg) {
   var reader = new FileReader();
   reader.addEventListener('loadend', () => {
     var obj = decode(reader.result);
 
     //console.log(JSON.stringify(obj));
 
-    if(obj._ == 'ping') {
-      this._updatePing(obj.d[0])
+    if (obj._ == 'ping') {
+      this._updatePing(obj.d[0]);
     } else if (this._events[obj._]) {
       this._events[obj._].apply(this, obj.d);
     }
@@ -100,7 +102,7 @@ DESocket.prototype._onMessage = function(msg) {
   reader.readAsArrayBuffer(msg.data);
 };
 
-DESocket.prototype._onClose = function(event) {
+DESocket.prototype._onClose = function (event) {
   if (this.options.debug) {
     console.log('socket disconnected', arguments);
   }
